@@ -1,25 +1,38 @@
-const ptn = require('parse-torrent-name');
-const request = require('request');
-const addic7edApi = require('addic7ed-api');
+#!/usr/bin/env node
 
-var infos = ptn(' Mr.Robot.S02E02.HDTV.x264-KILLERS[ettv]');
+const request = require('request')
+const ptn = require('parse-torrent-name')
+const addic7edApi = require('addic7ed-api')
 
-console.log(infos)
+module.exports = {
+  download: download,
+  find_subtitle_by_team: find_subtitle_by_team
+}
 
-addic7edApi.search(infos.title, infos.season, infos.episode,  ['eng'])
-.then(subtitlesList => {
-  var subInfo = subtitlesList.find(subtitle => infos.group.includes(subtitle.team)
-    || infos.group.includes(subtitle.version)
-    || infos.group.includes(subtitle.distribution))
+function download(fileName){
+  var infos = ptn(fileName)
+  console.log(infos)
+  addic7edApi.search(infos.title, infos.season, infos.episode,  ['eng'])
+  .then(subtitlesList => {
+    console.log(subtitlesList)
+    var subInfo = find_subtitle_by_team(subtitlesList, infos.group)
+    console.log(subInfo)
 
-    console.log(subInfo);
+    // if (subInfo) { addic7edApi.download(subInfo,
+    // './South.Park.S19E06.srt').then(function () { console.log('Subtitles file
+    // saved.'); }); }
+  })
+  .catch(error => console.error("Error while searchin for subtitle: %s", error))
+}
 
-    // if (subInfo) {
-    //     addic7edApi.download(subInfo, './South.Park.S19E06.srt').then(function () {
-    //         console.log('Subtitles file saved.');
-    //     });
-    // }
-})
-.catch(error =>
-  console.error("Error while searchin for subtitle")
-);
+function find_subtitle_by_team(subtitlesList, group){
+  return subtitlesList.find(subtitle =>
+    group.includes(subtitle.team) ||
+    group.includes(subtitle.version) ||
+    group.includes(subtitle.distribution)
+  )
+}
+
+if (require.main === module) {
+  download('Mr.Robot.S02E02.HDTV.x264-KILLERS[ettv]')
+}
